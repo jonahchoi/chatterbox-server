@@ -81,6 +81,44 @@ describe('Node Server Request Listener Function', function() {
     expect(res._ended).to.equal(true);
   });
 
+  it('Should add data to new messages', function() {
+    var stubMsg = {
+      username: 'nagaurvin',
+      text: 'Container Safety!'
+    };
+    var req = new stubs.request('/classes/messages', 'POST', stubMsg);
+    var res = new stubs.response();
+
+    handler.requestHandler(req, res);
+
+    expect(res._responseCode).to.equal(201);
+
+    req = new stubs.request('/classes/messages', 'GET');
+    res = new stubs.response();
+
+    handler.requestHandler(req, res);
+
+    expect(res._responseCode).to.equal(200);
+    var messages = JSON.parse(res._data);
+    expect(messages.length).to.be.above(0);
+    expect(messages[0].message_id).to.be.a('number');
+    var dateAt = new Date(messages[0].createdAt);
+    console.log(dateAt);
+    expect(dateAt).to.be.an.instanceOf(Date);
+    expect(dateAt.getTime(), 'Invalid Date at createdAt').to.not.be.NaN;
+    expect(res._ended).to.equal(true);
+  });
+
+  it('Should respond to OPTIONS method', function() {
+    var req = new stubs.request('/classes/messages', 'OPTIONS');
+    var res = new stubs.response();
+
+    handler.requestHandler(req, res);
+
+    expect(res._responseCode).to.equal(200);
+    expect(res._ended).to.equal(true);
+  });
+
   it('Should 404 when asked for a nonexistent file', function() {
     var req = new stubs.request('/arglebargle', 'GET');
     var res = new stubs.response();
