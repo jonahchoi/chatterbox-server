@@ -11,7 +11,9 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
-
+/*
+VANILLA NODE VERSION
+-------------------------------------------------------------
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
   //
@@ -28,16 +30,7 @@ var requestHandler = function(request, response) {
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
   console.log('Serving request types ' + request.method + ' for url ' + request.url);
-  /* let body = [];
-  request.on('error', (err) => {
-    console.error(err);
-  }).on('data', (chunk) => {
-    console.log('chunk:', chunk)
-    body.push(chunk);
-  }).on('end', () => {
-    body = Buffer.concat(body).toString();
-    // BEGINNING OF NEW STUFF
-  }) */
+
 
   // The outgoing status.
   var statusCode = 200;
@@ -62,7 +55,7 @@ var requestHandler = function(request, response) {
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
   if(request.method === 'OPTIONS' && request.url === '/classes/messages') {
-    response.writeHead(200, headers);
+    response.writeHead(statusCode, headers);
     response.end();
   }
 
@@ -93,11 +86,53 @@ var requestHandler = function(request, response) {
     response.end();
   }
 };
+ */
 
+//-----------------------------------------------------------------
+
+//EXPRESS
+//ONLY COMBINED HANDLERS BECAUSE OF TESTS, BUT TESTS DIDN'T WORK ANYWAY
+var requestHandler = function(request, response) {
+
+  console.log('Serving request types ' + request.method + ' for url ' + request.url);
+
+  if(request.method === 'OPTIONS') {
+    response.sendStatus(200);
+  }
+
+  else if(request.method === 'GET') {
+    response.status(200).send(JSON.stringify(messages));
+  }
+
+  else if(request.method === 'POST') {
+    var newMsg = request.body;
+    newMsg.message_id = newId++;
+    newMsg.createdAt = new Date();
+    messages.unshift(newMsg);
+    response.status(201).send(JSON.stringify(messages));
+  }
+};
 let newId = 1;
 
 let messages = [];
 
+/*
+let getHandler = (req, res) => {
+  res.send(JSON.stringify(messages)).end();
+}
+let postHandler = (req, res) => {
+
+  var newMsg = req.body;
+  console.log('newMsg:', newMsg);
+  newMsg.message_id = newId++;
+  newMsg.createdAt = new Date();
+  messages.unshift(newMsg);
+  res.status(201).send(JSON.stringify(messages));
+}
+let optionsHandler = (req, res) => {
+  res.sendStatus(200).end();
+}
+ */
 // These headers will allow Cross-Origin Resource Sharing (CORS).
 // This code allows this server to talk to websites that
 // are on different domains, for instance, your chat client.
@@ -115,3 +150,7 @@ var defaultCorsHeaders = {
 };
 
 exports.requestHandler = requestHandler;
+/* exports.getHandler = getHandler;
+exports.postHandler = postHandler;
+exports.optionsHandler = optionsHandler; */
+exports.defaultCorsHeaders = defaultCorsHeaders;

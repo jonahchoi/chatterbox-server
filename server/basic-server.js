@@ -1,7 +1,11 @@
 /* Import node's http module: */
-var http = require('http');
+// var http = require('http');
 var handler = require('./request-handler.js');
 
+const express = require('express');
+
+const app = express();
+app.use(express.json());
 // Every server needs to listen on a port with a unique number. The
 // standard port for HTTP servers is port 80, but that port is
 // normally already claimed by another server and/or not accessible
@@ -20,9 +24,26 @@ var ip = '127.0.0.1';
 // incoming requests.
 //
 // After creating the server, we will tell it to listen on the given port and IP. */
-var server = http.createServer(handler.requestHandler);
+//--------------------------------------------------------------
+/* var server = http.createServer(handler.requestHandler);
 console.log('Listening on http://' + ip + ':' + port);
-server.listen(port, ip);
+server.listen(port, ip); */
+//--------------------------------------------------------------
+app.use((req, res, next) => {
+  res.set(handler.defaultCorsHeaders);
+  res.setHeader('content-type', 'application/json');
+  next();
+})
+
+app.route('/classes/messages')
+.options(handler.requestHandler)
+.get(handler.requestHandler)
+.post(handler.requestHandler)
+
+app.listen(port, ip, (err) => {
+  if(err) console.log(err);
+  console.log(`Chatterbox listening on http://${ip}:${port}`)
+})
 
 // To start this server, run:
 //
