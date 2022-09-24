@@ -27,7 +27,17 @@ var requestHandler = function(request, response) {
   // Adding more logging to your server can be an easy way to get passive
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
-  console.log('Serving request type ' + request.method + ' for url ' + request.url);
+  console.log('Serving request types ' + request.method + ' for url ' + request.url);
+  /* let body = [];
+  request.on('error', (err) => {
+    console.error(err);
+  }).on('data', (chunk) => {
+    console.log('chunk:', chunk)
+    body.push(chunk);
+  }).on('end', () => {
+    body = Buffer.concat(body).toString();
+    // BEGINNING OF NEW STUFF
+  }) */
 
   // The outgoing status.
   var statusCode = 200;
@@ -39,11 +49,10 @@ var requestHandler = function(request, response) {
   //
   // You will need to change this if you are sending something
   // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = 'text/plain';
+  headers['Content-Type'] = 'application/json';
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
 
   // Make sure to always call response.end() - Node may not send
   // anything back to the client until you do. The string you pass to
@@ -52,8 +61,42 @@ var requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  response.end('Hello, World!');
+  if(request.method === 'OPTIONS' && request.url === '/classes/messages') {
+    response.writeHead(200, headers);
+    response.end();
+  }
+
+  else if(request.method === 'GET' && request.url === '/classes/messages') {
+    response.writeHead(statusCode, headers);
+    response.end(JSON.stringify(messages));
+  }
+
+  else if(request.method === 'POST' && request.url === '/classes/messages') {
+    var body = '';
+    request.on('data', (chunk) => {
+      body += chunk;
+    })
+    request.on('end', () => {
+      let newMsg = JSON.parse(body);
+
+      newMsg.message_id = newId++;
+      newMsg.createdAt = new Date();
+      messages.unshift(newMsg);
+      response.writeHead(201, headers);
+      response.end(JSON.stringify(messages));
+      console.log('array:', messages)
+      //Might change return value
+    })
+  }
+  else {
+    response.writeHead(404, headers);
+    response.end();
+  }
 };
+
+let newId = 1;
+
+let messages = [];
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
 // This code allows this server to talk to websites that
@@ -70,3 +113,5 @@ var defaultCorsHeaders = {
   'access-control-allow-headers': 'content-type, accept, authorization',
   'access-control-max-age': 10 // Seconds.
 };
+
+exports.requestHandler = requestHandler;

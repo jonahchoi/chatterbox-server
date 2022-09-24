@@ -18,6 +18,7 @@
   "scripts": {
     "start:server": "node server/basic-server.js",
     "start:client": "npx live-server",
+    "dev": "nodemon server/basic-server.js",
     "test": "mocha server/spec",
     "lint": "eslint ./"
   },
